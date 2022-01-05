@@ -1,0 +1,30 @@
+%%time 
+import numpy as np
+def is_Prime(n):
+    if n < 2:
+        return False
+    elif n == 2 or n == 3:
+        return True
+    elif n % 2 == 0:
+        return False
+    elif n % 6 == 3:
+        return False
+    else:
+        x = int(np.sqrt(n))
+    i = 3    
+    while i <= x:
+        if n % i == 0:
+            return False
+        i += 1
+    return True
+
+def nthPrime(x):
+    n = 0
+    prime = 1
+    while n < x:
+        prime += 1
+        if is_Prime(prime):
+            n += 1
+    return prime 
+
+print(nthPrime(10001))

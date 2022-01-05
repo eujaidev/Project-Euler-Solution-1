@@ -1,0 +1,25 @@
+%%time 
+def is_palindrome(num):
+    tnum = num 
+    rnum = 0
+    while (tnum > 0):
+        rnum = rnum*10+(tnum%10)
+        tnum = tnum//10
+    if rnum == num:
+        return True
+    else:
+        return False
+
+n=0    
+for i in range(999,100,-1):
+    for j in range(i,100,-1):
+        p = i*j
+        if is_palindrome(p) and p>n:
+            n = p
+            a=i
+            b=j 
+print(a,'*',b,'=',n)
+
+
+    
+              

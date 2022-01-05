@@ -1,0 +1,12 @@
+
+def lpf(n):
+    if n % 2==0:
+        x=n // 2
+    else:
+        x=n//3
+    for i in range(2,x+1):
+        if n%i==0:
+            return lpf(n//i)
+            break
+    return n
+print(lpf(600851475143))

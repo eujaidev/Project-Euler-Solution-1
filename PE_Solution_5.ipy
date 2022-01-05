@@ -1,0 +1,52 @@
+%%time 
+import numpy as np
+import statistics
+import matplotlib.pyplot as plt
+import time
+#%%
+X = np.arange(3,50)
+Y = []
+Z = []
+
+def hcf(x,y):
+    while y>0:
+        x,y = y,x%y
+    return x
+
+def lcm(n):
+    lcm = 0
+    x = 1
+    y = 2
+    while y<=n:
+        lcm = x*y//hcf(x, y)
+        x = lcm 
+        y += 1
+    return x
+#%%
+for n in X:
+    for m in range(10000000):
+        start = time.time_ns()
+        lcm(n)
+        end = time.time_ns()
+        Y.append(end-start)
+    Z.append(Y)
+    Y =[]
+arr = np.array(Z)
+row_average = arr.mean(axis=1)
+stdev1 = np.std(arr,axis=1)
+#%%
+# plt.figure(figsize=(8,5),dpi=80)
+# plt.plot(X,row_average,'r.')
+# plt.xlim(0,50)
+# plt.xticks(np.linspace(0,50,11))
+# plt.xlabel("n")
+# plt.ylabel("t(ns)")
+# plt.show()
+
+plt.figure(figsize=(8,5),dpi=80)
+plt.errorbar(X,row_average,yerr=stdev1)
+plt.xlim(0,50)
+plt.xticks(np.linspace(0,50,11))
+plt.xlabel("n")
+plt.ylabel("t(ns)")
+plt.show()
