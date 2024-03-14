@@ -1,0 +1,82 @@
+import time
+import numpy as np
+import math
+#%%
+nrow = 1000
+R = np.zeros((nrow,1))
+S = np.zeros((nrow,1))
+#%%
+# Brute Force Approach
+def triplet(sum):
+    for a in range(3,(sum-3)//3):
+        for b in range(a,(sum-a)//2):
+            c = sum-(a+b)
+            if c**2 == a**2+b**2:
+                
+                return a,b,c,a*b*c
+#%%
+for m in range(nrow):
+  tic = time.time_ns()
+  triplet(1000)
+  toc = time.time_ns()
+  R[m,0] = toc-tic
+average1 = R.mean(axis=0)
+print(average1)
+#%%
+# Second Approach
+def pythagorean_triplet1(sum):
+  for c in range(sum//3,sum//2):
+    a_plus_b = sum-c
+    # print("a+b =",a_plus_b)
+    # a_times_b  = ((a_plus_b)**2 - c**2)//2
+    # print("ab =",a_times_b)
+    # x = a_plus_b**2
+    # y = 4*a_times_b
+    x = c**2-sum**2+(2*sum*c)
+    # print('x :',x)
+    if x > 0:
+      a_minus_b = (math.sqrt(x))
+      # print("a-b =",a_minus_b)
+      if(a_minus_b.is_integer()):
+        a = int((a_plus_b + a_minus_b)//2)
+        b = a_plus_b - a
+        return a,b,c,a*b*c
+#%%
+for m in range(nrow):
+  tic = time.time_ns()
+  pythagorean_triplet1(1000)
+  toc = time.time_ns()
+  S[m,0] = toc-tic
+average2 = S.mean(axis=0)
+print(average2)
+#%%
+# Third Approach
+def gcd(x,y):
+    while y>0:
+        x,y = y,x%y
+    return x
+def pythagorean_triplet2(s):
+    s2 = s//2
+    mlimit = math.floor((math.sqrt(s)))-1
+    for m in range(2,mlimit):
+        if s2 % m == 0:
+            sm = s2 / m
+            while sm % 2 == 0:
+                sm = sm / 2
+            if m % 2 == 0:
+                k = m+2
+            else: 
+                k = m+1
+            while k < 2*m and k <= sm:
+                if sm % k == 0 and gcd(k,m) == 1:
+                    d = s2 / (k*m)
+                    n = k-m
+                    a = d*(m*m-n*n)
+                    b = 2*d*m*n
+                    c = d*(m*m+n*n)
+                    # print('a =',a,' b =',b,' c =',c)
+                    # print('product =',a*b*c)
+                k = k+2
+            return a,b,c,a*b*c
+#%%
+print(pythagorean_triplet2(1000))

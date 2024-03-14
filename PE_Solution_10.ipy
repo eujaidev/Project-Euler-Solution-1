@@ -1,0 +1,189 @@
+#Imports
+ 
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os as os
+import time
+import timeit
+import multiprocessing as mp
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sns.set_context("paper")
+sns.set_theme(palette='tab20', style="ticks", font_scale=1)
+
+#%%
+a = 10**5
+r = 10**(0.1)
+X = [int(a*r**(i-1)) for i in range(1,22)]
+
+#%%
+nrow = 5
+ncol = len(X)
+R = np.zeros((nrow,ncol))
+S = np.zeros((nrow,ncol))
+T = np.zeros((nrow,ncol))
+
+#%% Brute Force
+
+def is_Prime(n):
+    if n < 2:
+        return False
+    elif n == 2 or n == 3:
+        return True
+    elif n % 2 == 0 or n % 3 == 0:
+        return False
+    else:
+        x = int(np.sqrt(n))    
+    for i in range(5, x+1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def prime_sum(n): #function for summation of primes below n 
+    if n <= 2:
+        return False
+    if n == 3:
+        return 2
+    ans = 2
+    for i in range(3,n,2):
+        if is_Prime(i):
+            ans += i
+    return ans
+
+#%% More pythonized
+
+is_prime_v = np.vectorize(is_Prime)
+
+def prime_sum_v(n):
+    L = np.arange(1,n)
+    masked = is_prime_v(L)
+    return np.sum(L[masked])
+
+#%% Simple Sieve
+
+def sieve_sum(n):    
+    X = np.arange(n)
+    X[1] = False
+    i = 2
+    while i**2 < n:
+        if X[i] != 0:
+            X[i**2::i] = False
+        i += 1
+    ans = np.sum(X, dtype=float)
+    return ans
+
+#%% Masked Sieve
+ 
+def masked_sieve_sum(n):
+    arr = np.arange(n)
+    mask = np.ones(len(arr), dtype=bool)
+    mask[0:2] = False
+    marr = arr[mask]
+    i = 0
+    j = marr[i]
+    while j**2 < n:
+        mask[j**2::j] = False
+        marr = arr[mask]
+        i = i + 1
+        j = marr[i]
+    return np.sum(marr, dtype=float)
+
+#%% Time measurement
+
+%%time 
+for i in range (ncol):
+    x = X[i]
+    for j in range(nrow):
+        tic = time.time_ns()
+        prime_sum(x)
+        toc = time.time_ns()
+        R[j,i] = toc-tic
+average1 = R.mean(axis = 0)
+
+#%% Time measurement
+
+%%time
+for i in range (ncol):
+    x = X[i]
+    for j in range(nrow):
+        tic = time.time_ns()
+        sieve_sum(x)
+        toc = time.time_ns()
+        S[j,i] = toc-tic
+average2 = S.mean(axis = 0)
+
+#%% Save & Load
+
+np.save('t1.npy',average1)
+np.save('t2.npy', average2)
+a = np.load('t1.npy')
+b = np.load('t2.npy')
+
+#%% Plotting
+
+plt.figure(figsize=(8,5),dpi=80)
+plt.semilogy(X, a, marker="o", color="red", label='t1')
+plt.semilogy(X, b, marker="o", color="black", label='t2')
+plt.legend(loc='upper left')
+plt.xlabel("Number")
+plt.ylabel("Time (ns)")
+plt.show()
+
+#%% Time measurement
+
+def measure_time(t):
+    t0 = timeit.timeit(lambda: prime_sum(t), number = 100) / 100
+    t1 = timeit.timeit(lambda: prime_sum_v(t), number = 100) / 100
+    t2 = timeit.timeit(lambda: sieve_sum(t), number = 100) / 100
+    t3 = timeit.timeit(lambda: masked_sieve_sum(t), number = 100) / 100
+    return t0, t1, t2, t3
+
+T = np.int64(np.logspace(1, 2, num=10, endpoint=True))
+perf = np.zeros((len(T), 4))
+for i in range(0, len(T)):
+    print(i)
+    t = T[i] 
+    perf[i,0], perf[i,1], perf[i,2], perf[i,3] = measure_time(t)
+
+#%%
+
+plt.plot(T, perf, marker = 'o', lw = 0, ms = 3)
+plt.yscale('log')
+plt.xscale('log')
+plt.xlabel("N")
+plt.ylabel("Time(s)")
+plt.legend(['Brute Force', 'Brute Force Vectorized', 'Sieve', 'Masked Sieve'])
+
+#%% Parallel Time Measurment
+
+T1 = np.int64(np.logspace(1, 5, num=10, endpoint=True))
+
+def measure_time_p(t):
+    if t < 1000:
+        N = 1000
+    elif t < 10000:
+        N = 100
+    else:
+        N = 10
+    
+    t0 = timeit.timeit(lambda: prime_sum(t), number = N) / N
+    t1 = timeit.timeit(lambda: prime_sum_v(t), number = N) / N
+    t2 = timeit.timeit(lambda: sieve_sum(t), number = N) / N
+    t3 = timeit.timeit(lambda: masked_sieve_sum(t), number = N) / N
+    return t0, t1, t2, t3
+
+pool = mp.Pool()
+results = pool.map(measure_time_p, T1)
+pool.close()
+
+perf_p = np.array(results)
+
+#%%
+
+plt.plot(T1, perf_p, marker = 'o', lw = 0, ms = 3)
+plt.yscale('log')
+plt.xscale('log')
+plt.xlabel("N")
+plt.ylabel("Time(s)")
+plt.legend(['Brute Force', 'Brute Force Vectorized', 'Sieve', 'Masked Sieve'])
